@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦门拼单官 mcd-tuan-optimizer · 可视化演示</title>
+<style>
+  :root {
+    --mcd-red: #DA291C;
+    --mcd-red-dark: #B01E14;
+    --mcd-yellow: #FFC72C;
+    --mcd-yellow-soft: #FFE9A8;
+    --cream: #FFF8EC;
+    --ink: #2B2B2B;
+    --ink-soft: #6B6259;
+    --card: #FFFFFF;
+    --green: #2E7D32;
+    --shadow: 0 6px 24px rgba(218, 41, 28, .08), 0 2px 6px rgba(0,0,0,.06);
+    --radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- 顶栏 ---------- */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255, 248, 236, .92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid #F0E2C8;
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .brand { font-weight: 800; font-size: 17px; color: var(--mcd-red); }
+  .brand small { color: var(--ink-soft); font-weight: 500; margin-left: 8px; font-size: 12px; }
+  nav a.navlink { margin-left: 20px; color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+  nav a.navlink:hover { color: var(--mcd-red); }
+
+  /* ---------- Hero ---------- */
+  .hero { text-align: center; padding: 72px 0 56px; }
+  .hero .logo { font-size: 64px; line-height: 1; }
+  .hero h1 { font-size: 40px; letter-spacing: 2px; margin: 18px 0 8px; color: var(--mcd-red); }
+  .hero .sub { font-size: 18px; color: var(--ink-soft); margin-bottom: 6px; }
+  .hero .flow-line { color: var(--ink); font-weight: 600; font-size: 15px; margin: 14px 0 26px; }
+  .hero .flow-line span { color: var(--mcd-red); }
+  .btns { display: flex; gap: 14px; justify-content: center; }
+  .btn {
+    display: inline-block; padding: 12px 28px; border-radius: 999px;
+    font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer;
+    border: none; transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-red { background: var(--mcd-red); color: #fff; box-shadow: 0 6px 16px rgba(218,41,28,.35); }
+  .btn-ghost { background: #fff; color: var(--mcd-red); border: 2px solid var(--mcd-red); }
+  .badges { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .badge {
+    background: #fff; border: 1px solid #F0E2C8; border-radius: 999px;
+    padding: 5px 14px; font-size: 12.5px; color: var(--ink-soft);
+  }
+  .badge b { color: var(--mcd-red); }
+
+  /* ---------- 通用区块 ---------- */
+  section { padding: 40px 0; }
+  .sec-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+  .sec-title em { color: var(--mcd-red); font-style: normal; }
+  .sec-desc { color: var(--ink-soft); font-size: 14.5px; margin-bottom: 22px; }
+  .card {
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 28px;
+  }
+
+  /* ---------- 交互演示 ---------- */
+  .demo-grid { display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+  @media (max-width: 900px) { .demo-grid { grid-template-columns: 1fr; } }
+
+  .editor h3, .result h3 { font-size: 16px; margin-bottom: 14px; }
+
+  /* ---- 模式切换（分段控件） ---- */
+  .mode-toggle {
+    display: flex; gap: 0; margin-bottom: 14px; padding: 4px;
+    background: #F1EAD9; border-radius: 12px;
+  }
+  .mode-btn {
+    flex: 1; padding: 9px; border-radius: 9px; border: none; background: transparent;
+    color: var(--ink-soft); font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: all .18s ease;
+  }
+  .mode-btn:hover:not(.on) { color: var(--mcd-red); }
+  .mode-btn.on {
+    background: var(--mcd-red); color: #fff;
+    box-shadow: 0 3px 10px rgba(218,41,28,.35);
+  }
+
+  /* ---- 真实连线配置条 ---- */
+  .live-config { display: none; gap: 8px; margin-bottom: 10px; align-items: stretch; }
+  .live-config.show { display: flex; }
+  .live-config input {
+    flex: 1; padding: 9px 12px; border: 1.5px solid #EAE0CE; border-radius: 10px; font-size: 13px;
+    background: #FFFDF8; outline: none; transition: border-color .15s, box-shadow .15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .live-config input:focus { border-color: var(--mcd-yellow); box-shadow: 0 0 0 3px rgba(255,199,44,.25); }
+  .live-config button {
+    padding: 9px 14px; border-radius: 10px; border: none; background: var(--mcd-yellow);
+    color: #6B5200; font-weight: 700; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+    transition: filter .15s, transform .15s;
+  }
+  .live-config button:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
+  .live-config button:disabled { opacity: .55; cursor: wait; }
+  .live-hint { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 10px; display: none; line-height: 1.5; }
+  .live-hint.show { display: block; }
+  .live-hint b { color: var(--green); }
+  .live-hint code { background: #F5EFE2; padding: 1px 5px; border-radius: 4px; }
+
+  /* ---- 人员卡片 ---- */
+  .person {
+    position: relative; border: 1.5px solid #F0E2C8; border-radius: 14px;
+    padding: 12px 14px 10px 18px; margin-bottom: 12px; background: #FFFDF8;
+    transition: border-color .15s, box-shadow .15s;
+    animation: cardIn .25s ease;
+  }
+  .person:hover { border-color: #E8D8B8; box-shadow: 0 4px 14px rgba(180,140,60,.10); }
+  .person::before {
+    content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px;
+    border-radius: 0 4px 4px 0; background: var(--pc, var(--mcd-red));
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .person .p-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .person .p-avatar {
+    width: 26px; height: 26px; border-radius: 50%; flex: none;
+    background: var(--pc, var(--mcd-red)); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800;
+  }
+  .person .p-head .p-title { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  .person input.pname {
+    border: none; background: transparent; font-size: 15px; font-weight: 700; color: var(--ink);
+    width: 100px; outline: none; border-bottom: 1.5px dashed transparent; transition: border-color .15s;
+  }
+  .person input.pname:hover, .person input.pname:focus { border-bottom-color: var(--pc, var(--mcd-red)); }
+  .person .p-sub { font-size: 11.5px; color: #B9AE9C; font-weight: 500; }
+  .person .pdel {
+    color: #C9BFB2; cursor: pointer; font-size: 12px; border: none; background: none;
+    padding: 4px 6px; border-radius: 6px; transition: all .15s; white-space: nowrap;
+  }
+  .person .pdel:hover { color: var(--mcd-red); background: #FDECEC; }
+
+  /* ---- 餐品行 ---- */
+  .want-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+    background: #fff; border: 1px solid #EFE6D2; border-radius: 10px; padding: 5px 8px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .want-row:hover { border-color: #E2D3B4; }
+  .want-row:focus-within { border-color: var(--mcd-yellow); box-shadow: 0 0 0 3px rgba(255,199,44,.18); }
+  .want-row select {
+    flex: 1; min-width: 0; padding: 5px 4px; border: none; background: transparent;
+    font-size: 13px; color: var(--ink); outline: none; cursor: pointer;
+    text-overflow: ellipsis;
+  }
+  .want-row select option { color: var(--ink); }
+  .qty {
+    display: flex; align-items: center; gap: 4px; flex: none;
+    background: #F7F1E5; border-radius: 8px; padding: 2px;
+  }
+  .qty button {
+    width: 22px; height: 22px; border-radius: 6px; border: none; background: transparent;
+    cursor: pointer; font-size: 14px; line-height: 1; color: var(--mcd-red); font-weight: 800;
+    transition: background .12s;
+  }
+  .qty button:hover { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .qty span { min-width: 16px; text-align: center; font-weight: 700; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .wdel {
+    border: none; background: none; color: #D8CCB8; cursor: pointer; font-size: 13px;
+    width: 22px; height: 22px; border-radius: 6px; flex: none; transition: all .12s;
+  }
+  .wdel:hover { color: var(--mcd-red); background: #FDECEC; }
+  .add-row {
+    font-size: 12.5px; color: var(--mcd-red); cursor: pointer; background: none; border: none;
+    font-weight: 600; padding: 4px 2px; border-radius: 6px; transition: opacity .15s;
+  }
+  .add-row:hover { opacity: .75; text-decoration: underline; }
+  .add-person {
+    width: 100%; padding: 11px; border-radius: 12px; border: 1.5px dashed #E0D3B8;
+    background: none; color: var(--ink-soft); font-size: 13.5px; font-weight: 600; cursor: pointer;
+    margin-bottom: 14px; transition: all .15s;
+  }
+  .add-person:hover { border-color: var(--mcd-red); color: var(--mcd-red); background: #FFF5F3; }
+  .run-btn {
+    width: 100%; padding: 14px; border-radius: 14px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #E23729, var(--mcd-red)); color: #fff;
+    font-size: 16px; font-weight: 800; letter-spacing: .5px;
+    box-shadow: 0 6px 18px rgba(218,41,28,.35);
+    transition: opacity .15s, transform .15s, box-shadow .15s;
+  }
+  .run-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(218,41,28,.42); }
+  .run-btn:active:not(:disabled) { transform: translateY(0); }
+  .run-btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+  .editor-summary {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 2px 2px 12px; padding: 8px 12px; border-radius: 10px;
+    background: #FFF3D6; border: 1px solid #F5E3AE;
+    font-size: 12.5px; color: #8A6D00; font-weight: 600;
+  }
+  .editor-summary b { color: var(--mcd-red); font-variant-numeric: tabular-nums; }
+  .menu-filter { margin-bottom: 10px; }
+  .menu-filter input {
+    width: 100%; padding: 9px 12px; border: 1.5px solid #EAE0CE; border-radius: 10px;
+    font-size: 13px; background: #FFFDF8; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .menu-filter input:focus { border-color: var(--mcd-yellow); box-shadow: 0 0 0 3px rgba(255,199,44,.25); }
+
+  /* 流水线状态 */
+  .steps { display: flex; gap: 8px; margin-bottom: 18px; }
+  .step {
+    flex: 1; text-align: center; padding: 9px 4px; border-radius: 10px; font-size: 12.5px;
+    background: #F7F1E5; color: var(--ink-soft); font-weight: 600; transition: all .3s;
+    border: 1.5px solid transparent;
+  }
+  .step.active { background: var(--mcd-yellow-soft); color: #8A6D00; border-color: var(--mcd-yellow); transform: scale(1.03); }
+  .step.done { background: #EAF6EA; color: var(--green); border-color: #CDE6CD; }
+  .pbar-wrap { height: 10px; background: #F1EAD9; border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
+  .pbar { height: 100%; width: 0; background: linear-gradient(90deg, var(--mcd-yellow), var(--mcd-red)); transition: width .05s linear; }
+  .pbar-text { font-size: 12px; color: var(--ink-soft); margin-bottom: 14px; min-height: 18px; }
+
+  /* 结果 */
+  .result-empty { color: #C9BFB2; text-align: center; padding: 70px 0; font-size: 14px; }
+  .price-hero { text-align: center; padding: 8px 0 16px; border-bottom: 1px dashed #F0E2C8; margin-bottom: 16px; }
+  .price-hero .big { font-size: 44px; font-weight: 900; color: var(--mcd-red); line-height: 1.1; }
+  .price-hero .meta { font-size: 13.5px; color: var(--ink-soft); }
+  .price-hero .meta b { color: var(--green); }
+  .coupon-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip {
+    background: var(--mcd-yellow-soft); border: 1px solid var(--mcd-yellow); color: #8A6D00;
+    border-radius: 999px; padding: 4px 12px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip b { color: var(--mcd-red); }
+  .split-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 13.5px; }
+  .split-row .who { width: 52px; font-weight: 700; }
+  .split-row .bar-bg { flex: 1; height: 18px; background: #F5EFE2; border-radius: 99px; overflow: hidden; }
+  .split-row .bar { height: 100%; width: 0; border-radius: 99px; transition: width .6s cubic-bezier(.2,.8,.3,1); }
+  .split-row .amt { width: 120px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .split-row .amt small { color: var(--ink-soft); font-weight: 400; }
+  .split-total { text-align: right; font-size: 13px; color: var(--green); font-weight: 700; margin-top: 4px; }
+  .addon-card {
+    margin-top: 18px; background: linear-gradient(120deg, #FFF3D6, #FFE9A8);
+    border: 1.5px solid var(--mcd-yellow); border-radius: 14px; padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .addon-card .t { font-size: 14px; font-weight: 700; }
+  .addon-card .d { font-size: 12.5px; color: #7A6A3A; }
+  .addon-card .d b { color: var(--mcd-red); }
+  .addon-btn {
+    padding: 8px 18px; border-radius: 999px; border: none; cursor: pointer;
+    background: var(--mcd-red); color: #fff; font-size: 13.5px; font-weight: 700; white-space: nowrap;
+  }
+  .stat-line { margin-top: 14px; font-size: 12px; color: var(--ink-soft); text-align: center; }
+
+  /* ---------- MCP 流程 ---------- */
+  .flow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+  @media (max-width: 900px) { .flow-grid { grid-template-columns: repeat(2, 1fr); } }
+  .tool-card {
+    background: #fff; border-radius: 14px; border: 1.5px solid #F0E2C8; padding: 16px 18px;
+    transition: transform .15s, border-color .15s;
+  }
+  .tool-card:hover { transform: translateY(-3px); border-color: var(--mcd-yellow); }
+  .tool-card .tn { font-family: Consolas, monospace; font-size: 13px; color: var(--mcd-red); font-weight: 700; }
+  .tool-card .tt { font-size: 14.5px; font-weight: 700; margin: 4px 0 2px; }
+  .tool-card .td { font-size: 12.5px; color: var(--ink-soft); }
+  .tool-card .tag { float: right; font-size: 10.5px; padding: 2px 8px; border-radius: 99px; background: #EAF6EA; color: var(--green); font-weight: 700; }
+  .tool-card .tag.w { background: #FDECEC; color: var(--mcd-red); }
+  .chain {
+    margin-top: 18px; background: #fff; border-radius: 14px; border: 1.5px solid #F0E2C8;
+    padding: 18px 22px; font-family: Consolas, monospace; font-size: 13px; line-height: 1.9;
+    white-space: pre; overflow-x: auto; color: var(--ink);
+  }
+  .chain b { color: var(--mcd-red); }
+
+  /* ---------- 终端 ---------- */
+  .terminal {
+    background: #1E1E28; border-radius: 14px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .term-bar { background: #2A2A38; padding: 9px 14px; display: flex; align-items: center; gap: 7px; }
+  .term-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .term-title { color: #8A8AA0; font-size: 12px; margin-left: 8px; font-family: Consolas, monospace; }
+  .term-body {
+    padding: 18px 20px; font-family: Consolas, "Courier New", monospace; font-size: 13px;
+    line-height: 1.75; color: #D8D8E0; min-height: 380px; white-space: pre-wrap;
+  }
+  .term-body .c-cmd { color: #FFC72C; }
+  .term-body .c-dim { color: #7A7A90; }
+  .term-body .c-red { color: #FF6B5E; font-weight: 700; }
+  .term-body .c-green { color: #7BD88F; }
+  .term-body .c-cyan { color: #6FC3DF; }
+  .term-play { margin-top: 12px; }
+
+  footer {
+    margin-top: 40px; padding: 30px 0 46px; text-align: center; color: var(--ink-soft); font-size: 12.5px;
+    border-top: 1px solid #F0E2C8;
+  }
+  footer b { color: var(--mcd-red); }
+  .foot-badge { display: inline-block; margin: 0 4px; padding: 2px 10px; background: #fff; border: 1px solid #F0E2C8; border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">🍟 麦门拼单官<small>mcd-tuan-optimizer</small></div>
+    <div>
+      <a class="navlink" href="#demo">交互演示</a>
+      <a class="navlink" href="#flow">MCP 集成</a>
+      <a class="navlink" href="#terminal">命令行演示</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="logo">🍟</div>
+    <h1>麦门拼单官</h1>
+    <div class="sub">基于麦当劳 MCP 的办公室拼单优化 CLI</div>
+    <div class="flow-line">找店 <span>→</span> 菜单 <span>→</span> 领券 <span>→</span> 组合优化 <span>→</span> 真实算价 <span>→</span> AA 分摊</div>
+    <div class="btns">
+      <a class="btn btn-red" href="#demo">🚀 立即体验交互演示</a>
+      <a class="btn btn-ghost" href="#terminal">⌨️ 查看命令行演示</a>
+    </div>
+    <div class="badges">
+      <span class="badge">运行时 <b>0</b> 第三方依赖</span>
+      <span class="badge">Node.js <b>≥18</b></span>
+      <span class="badge"><b>42</b> 个单元测试全绿</span>
+      <span class="badge"><b>7</b> 个 MCP 工具（全部只读+领券）</span>
+      <span class="badge">演示场景立省 <b>35%+</b></span>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 交互演示 ================= -->
+<section id="demo">
+  <div class="wrap">
+    <div class="sec-title">🧮 <em>交互式</em> 拼单优化演示</div>
+    <div class="sec-desc">左侧调整每个人的点餐意愿，点击「开始拼单优化」，实时观看券组合穷举 → 真实算价 → AA 分摊全过程（演示数据，逻辑与 CLI 完全一致）。</div>
+    <div class="demo-grid">
+      <!-- 左：意愿编辑器 -->
+      <div class="card editor">
+        <div class="mode-toggle">
+          <button class="mode-btn on" id="modeOfflineBtn">🧪 离线演示</button>
+          <button class="mode-btn" id="modeLiveBtn">🔴 真实连线 MCP</button>
+        </div>
+        <div class="live-config" id="liveConfig">
+          <input id="storeCodeInput" value="1950526" placeholder="门店 Code（如 1950526）">
+          <button id="loadMenuBtn">拉取真实菜单</button>
+        </div>
+        <div class="live-hint" id="liveHint"></div>
+        <h3 id="editorTitle">📝 拼单意愿（北京新东安二号餐厅 · 到店自取）</h3>
+        <div class="menu-filter" id="menuFilter" style="display:none">
+          <input id="menuFilterInput" placeholder="🔍 搜索餐品（如：薯条 / 鸡腿 / 美式）…">
+        </div>
+        <div id="peopleEditor"></div>
+        <div class="editor-summary" id="editorSummary"></div>
+        <button class="add-person" id="addPersonBtn">＋ 加一位拼单人</button>
+        <button class="run-btn" id="runBtn">🍟 开始拼单优化</button>
+      </div>
+      <!-- 右：流水线 + 结果 -->
+      <div class="card result">
+        <h3>⚙️ 优化流水线</h3>
+        <div class="steps">
+          <div class="step" id="step0">① 建篮算基准价</div>
+          <div class="step" id="step1">② 穷举券组合</div>
+          <div class="step" id="step2">③ 最优方案 + AA 分摊</div>
+          <div class="step" id="step3">④ 凑单建议</div>
+        </div>
+        <div class="pbar-wrap"><div class="pbar" id="pbar"></div></div>
+        <div class="pbar-text" id="pbarText"></div>
+        <div id="resultBody"><div class="result-empty">👈 先点左边的「开始拼单优化」</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MCP 集成 ================= -->
+<section id="flow">
+  <div class="wrap">
+    <div class="sec-title">🔌 <em>MCP</em> 集成架构</div>
+    <div class="sec-desc">Server：<code>https://mcp.mcd.cn</code>（Streamable HTTP · 无状态 · Bearer Token 鉴权 · 限流 600 次/分钟，内置 100ms 节流）。安全红线：只读 + 一键领券，绝不真实下单。</div>
+    <div class="flow-grid">
+      <div class="tool-card"><span class="tag">读</span><div class="tn">query-nearby-stores</div><div class="tt">找店</div><div class="td">按城市+关键词找到店自取门店，返回 storeCode / 地址 / 距离</div></div>
+      <div class="tool-card"><span class="tag">读</span><div class="tn">query-meals</div><div class="tt">菜单</div><div class="td">15 分类 118 餐品映射表，价格是「元」（字符串）</div></div>
+      <div class="tool-card"><span class="tag">读</span><div class="tn">query-store-coupons</div><div class="tt">门店可用券</div><div class="td">每券带 couponId / couponCode / products[]，优化器输入</div></div>
+      <div class="tool-card"><span class="tag">读</span><div class="tn">calculate-price</div><div class="tt">真实算价 ⚖️</div><div class="td">优化器的唯一「裁判」，逐商品挂券，价格单位是「分」</div></div>
+      <div class="tool-card"><span class="tag w">写·领券</span><div class="tn">auto-bind-coupons</div><div class="tt">一键领券</div><div class="td">自动领取全部可领券（唯一写操作，实测 7 张）</div></div>
+      <div class="tool-card"><span class="tag">读</span><div class="tn">available-coupons / query-my-coupons</div><div class="tt">券查询</div><div class="td">可领券预览 + 我的卡包核对</div></div>
+    </div>
+    <div class="chain">协议层   <b>initialize</b> ──▶ <b>notifications/initialized</b> ──▶ <b>tools/call</b> ×N（SSE 剥壳 / 内嵌 JSON 提取 / structuredContent 优先）
+
+业务链路 <b>stores</b> ─▶ <b>meals</b> ─▶ 模糊匹配 ─▶ 拼单篮 ─▶ <b>store-coupons</b>
+                                                     │
+                                                     ▼
+                              ┌──────────────── calculate-price（真实算价裁判）
+                              ▼
+                  券分配搜索（穷举/贪心）──▶ 凑单建议 ──▶ AA 分摊（最大余额法，分单位对平）</div>
+  </div>
+</section>
+
+<!-- ================= 终端演示 ================= -->
+<section id="terminal">
+  <div class="wrap">
+    <div class="sec-title">⌨️ <em>CLI</em> 实机演示</div>
+    <div class="sec-desc"><code>node bin/mctuan.js optimize --demo</code> 的真实输出（离线演示模式，无需 Token）：</div>
+    <div class="terminal">
+      <div class="term-bar">
+        <span class="term-dot" style="background:#FF5F57"></span>
+        <span class="term-dot" style="background:#FEBC2E"></span>
+        <span class="term-dot" style="background:#28C840"></span>
+        <span class="term-title">mctuan — bash</span>
+      </div>
+      <div class="term-body" id="termBody"></div>
+    </div>
+    <button class="btn btn-red term-play" id="termPlayBtn">▶ 播放演示</button>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p style="margin-bottom:10px">
+      <span class="foot-badge">🍟 麦门拼单官 mcd-tuan-optimizer</span>
+      <span class="foot-badge">麦当劳程序员节创意开发大赛参赛作品</span>
+    </p>
+    <p>⚠️ 本工具是<b>算价参谋</b>，只算价、不下单。价格以麦当劳官方渠道实时结果为准。Token 通过 <code>MCD_TOKEN</code> 环境变量注入，本页面及仓库不含任何真实凭证。</p>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+/* ================= 演示数据（与 src/demo/index.js 一致） ================= */
+
+const MEALS = {
+  '9900016001': { name: '巨无霸套餐', price: 3950, orig: 4500 },
+  '9900016010': { name: '麦辣鸡腿堡套餐', price: 3450, orig: 4000 },
+  '9900016075': { name: '龙焰芝士棒鸡腿堡三件套', price: 2990, orig: 5150 },
+  '9900016002': { name: '麦辣鸡腿堡', price: 2250, orig: 2500 },
+  '9900016004': { name: '那么大鸡排', price: 2300, orig: 2600 },
+  '9900016003': { name: '中薯条', price: 1350, orig: 1450 },
+  '9900016009': { name: '麦乐鸡(5块)', price: 1950, orig: 2300 },
+  '9900016011': { name: '王牌小食拼', price: 3250, orig: 4500 },
+  '9900016006': { name: '菠萝派', price: 650, orig: 800 },
+  '9900016007': { name: '香芋派', price: 650, orig: 800 },
+  '9900016005': { name: '可口可乐(中杯)', price: 950, orig: 1100 },
+  '9900016008': { name: '圆筒冰淇淋', price: 450, orig: 600 },
+};
+
+const COUPONS = [
+  { id: 'C001', code: 'BOGO_FRIES', title: '中薯条买一送一', type: 'bogo', productCodes: ['9900016003'] },
+  { id: 'C002', code: 'OFF_100_30', title: '满100减30', type: 'threshold', threshold: 10000, amount: 3000, productCodes: [] },
+  { id: 'C003', code: 'OFF_130_40', title: '满130减40', type: 'threshold', threshold: 13000, amount: 4000, productCodes: [] },
+  { id: 'C004', code: 'SNACK_8OFF', title: '王牌小食拼立减8元', type: 'off', amount: 800, productCodes: ['9900016011'] },
+];
+
+const DEFAULT_PEOPLE = [
+  { name: '张三', wants: [{ code: '9900016001', qty: 1 }] },
+  { name: '李四', wants: [{ code: '9900016010', qty: 1 }, { code: '9900016003', qty: 1 }] },
+  { name: '王五', wants: [{ code: '9900016002', qty: 1 }, { code: '9900016003', qty: 1 }] },
+];
+
+let people = JSON.parse(JSON.stringify(DEFAULT_PEOPLE));
+const PERSON_COLORS = ['#DA291C', '#FFC72C', '#2E7D32', '#6FC3DF', '#9C6BD6', '#E67E22'];
+
+/* 模式状态：离线演示（内置数据）/ 真实连线（经 demo-server.js 调用真实 MCP） */
+let liveMode = false;
+let liveReady = false; // 真实菜单已拉取
+let activeMeals = MEALS;      // {code: {name, price, orig}}
+let activeCoupons = COUPONS;  // 归一化 {id, code, title, productCodes}
+let menuFilterKw = '';        // 菜单搜索关键词（小写）
+
+const yuan = (fen) => '¥' + (fen / 100).toFixed(2);
+const pct = (p, w) => (w > 0 ? ((p / w) * 100).toFixed(1) + '%' : '0.0%');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/* ================= 演示算价 oracle（与 CLI 的演示 oracle 语义一致） ================= */
+
+function calcPrice(lines) {
+  let original = 0;
+  const byCouponId = new Map(COUPONS.map((c) => [c.id, c]));
+  const attached = [];
+  for (const line of lines) {
+    const meal = MEALS[line.productCode];
+    if (!meal) continue;
+    original += meal.price * line.quantity;
+    if (line.couponId) {
+      const cp = byCouponId.get(line.couponId);
+      if (cp) attached.push({ cp, line });
+    }
+  }
+  let discount = 0;
+  let thresholdBest = 0;
+  for (const { cp, line } of attached) {
+    if (cp.type === 'threshold') {
+      if (original >= cp.threshold) thresholdBest = Math.max(thresholdBest, cp.amount);
+    } else if (cp.type === 'bogo') {
+      discount += MEALS[line.productCode].price * Math.floor(line.quantity / 2);
+    } else if (cp.type === 'off') {
+      discount += cp.amount;
+    }
+  }
+  discount += thresholdBest;
+  return { price: original - discount, originalPrice: original, discount };
+}
+
+/* ================= 券分配搜索（穷举，逻辑与 src/core/optimizer.js 一致） ================= */
+
+function enumerateCombos(items, coupons) {
+  const usable = [];
+  coupons.forEach((c, ci) => {
+    const cand =
+      !c.productCodes || c.productCodes.length === 0
+        ? items.map((_, i) => i)
+        : items.map((it, i) => (c.productCodes.includes(it.productCode) ? i : -1)).filter((i) => i >= 0);
+    if (cand.length > 0) usable.push({ ci, cand });
+  });
+  const combos = [];
+  const assign = coupons.map(() => -1);
+  const occupied = new Set();
+  (function dfs(k) {
+    if (k === usable.length) {
+      if (assign.some((a) => a >= 0)) combos.push(assign.slice());
+      return;
+    }
+    const { ci, cand } = usable[k];
+    assign[ci] = -1;
+    dfs(k + 1);
+    for (const ii of cand) {
+      if (occupied.has(ii)) continue; // 一行一券
+      assign[ci] = ii;
+      occupied.add(ii);
+      dfs(k + 1);
+      occupied.delete(ii);
+      assign[ci] = -1;
+    }
+  })(0);
+  return combos;
+}
+
+function evalCombo(items, coupons, assignment) {
+  const lines = items.map((it) => ({ productCode: it.productCode, quantity: it.quantity }));
+  assignment.forEach((ii, ci) => {
+    if (ii >= 0) {
+      lines[ii].couponId = coupons[ci].id;
+      lines[ii].couponCode = coupons[ci].code;
+    }
+  });
+  return calcPrice(lines);
+}
+
+function optimize(items, coupons) {
+  const base = calcPrice(items.map((it) => ({ productCode: it.productCode, quantity: it.quantity })));
+  const combos = enumerateCombos(items, coupons);
+  const trace = [];
+  let best = { assignment: coupons.map(() => -1), result: base };
+  for (const a of combos) {
+    const r = evalCombo(items, coupons, a);
+    trace.push({ assignment: a, price: r.price });
+    if (r.price < best.result.price) best = { assignment: a.slice(), result: r };
+  }
+  return { base, best, calls: 1 + combos.length, combos: combos.length, trace };
+}
+
+/* ================= 凑单建议 ================= */
+
+function suggestAddon(items, coupons, assignment, currentPriceFen) {
+  const inBasket = new Set(items.map((i) => i.productCode));
+  const cands = Object.entries(MEALS)
+    .map(([code, m]) => ({ code, name: m.name, unit: m.price }))
+    .filter((a) => !inBasket.has(a.code))
+    .sort((a, b) => a.unit - b.unit)
+    .slice(0, 8);
+  let bestSug = null;
+  let calls = 0;
+  for (const addon of cands) {
+    const newItems = [...items, { productCode: addon.code, name: addon.name, quantity: 1 }];
+    const addonIdx = newItems.length - 1;
+    const variants = [assignment.slice()];
+    for (let ci = 0; ci < coupons.length && variants.length < 4; ci++) {
+      if (assignment[ci] >= 0) continue;
+      const cp = coupons[ci];
+      if (cp.productCodes.length === 0 || cp.productCodes.includes(addon.code)) {
+        const a2 = assignment.slice();
+        a2[ci] = addonIdx;
+        variants.push(a2);
+      }
+    }
+    let addonBest = null;
+    for (const v of variants) {
+      const r = evalCombo(newItems, coupons, v);
+      calls++;
+      if (r.price < currentPriceFen && (!addonBest || r.price < addonBest.price)) {
+        addonBest = { price: r.price, assignment: v };
+      }
+    }
+    if (addonBest) {
+      const saving = currentPriceFen - addonBest.price;
+      if (!bestSug || saving > bestSug.savingFen) {
+        bestSug = { addon, newPriceFen: addonBest.price, savingFen: saving, assignment: addonBest.assignment };
+      }
+    }
+  }
+  return { suggestion: bestSug, calls };
+}
+
+/* ================= AA 分摊（最大余额法，与 src/core/splitter.js 一致） ================= */
+
+function largestRemainder(total, weights) {
+  const n = weights.length;
+  if (n === 0) return [];
+  const sumW = weights.reduce((a, b) => a + b, 0);
+  if (sumW <= 0 || total === 0) return weights.map(() => 0);
+  const nums = weights.map((w) => total * w);
+  const floors = nums.map((x) => Math.floor(x / sumW));
+  const rems = nums.map((x) => x % sumW);
+  let rest = total - floors.reduce((a, b) => a + b, 0);
+  const order = rems.map((r, i) => ({ i, r })).sort((a, b) => b.r - a.r || a.i - b.i);
+  let k = 0;
+  while (rest > 0 && order.length > 0) {
+    floors[order[k % order.length].i] += 1;
+    rest -= 1;
+    k += 1;
+  }
+  return floors;
+}
+
+function splitBill(shares, priceFen, discountFen) {
+  const allocs = largestRemainder(discountFen, shares.map((s) => s.originalFen));
+  const result = shares.map((s, i) => ({
+    name: s.name,
+    originalFen: s.originalFen,
+    discountFen: allocs[i],
+    payFen: s.originalFen - allocs[i],
+  }));
+  const sumPay = result.reduce((a, r) => a + r.payFen, 0);
+  const residual = priceFen - sumPay;
+  if (result.length > 0) {
+    result[0].payFen += residual; // 尾差归发起人
+    result[0].discountFen -= residual;
+  }
+  return { shares: result, residualFen: residual };
+}
+
+/* ================= 编辑器 UI ================= */
+
+const editorEl = document.getElementById('peopleEditor');
+
+function renderEditor() {
+  editorEl.innerHTML = '';
+  const codes = Object.keys(activeMeals);
+  people.forEach((p) => p.wants.forEach((w) => {
+    if (!activeMeals[w.code]) w.code = codes[0]; // 菜单切换后兜底
+  }));
+  people.forEach((p, pi) => {
+    const color = PERSON_COLORS[pi % PERSON_COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'person';
+    card.style.setProperty('--pc', color);
+    const head = document.createElement('div');
+    head.className = 'p-head';
+    const title = document.createElement('div');
+    title.className = 'p-title';
+    const avatar = document.createElement('span');
+    avatar.className = 'p-avatar';
+    avatar.textContent = (p.name || '?').slice(0, 1);
+    const nameInput = document.createElement('input');
+    nameInput.className = 'pname';
+    nameInput.value = p.name;
+    nameInput.onchange = () => {
+      p.name = nameInput.value || p.name;
+      avatar.textContent = (p.name || '?').slice(0, 1);
+      sub.textContent = pSubText(p);
+      renderSummary();
+    };
+    const sub = document.createElement('span');
+    sub.className = 'p-sub';
+    sub.textContent = pSubText(p);
+    title.appendChild(avatar);
+    title.appendChild(nameInput);
+    title.appendChild(sub);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'pdel';
+    delBtn.textContent = '✕ 移除';
+    delBtn.onclick = () => { people.splice(pi, 1); renderEditor(); };
+    head.appendChild(title);
+    head.appendChild(delBtn);
+    card.appendChild(head);
+
+    p.wants.forEach((w, wi) => {
+      const row = document.createElement('div');
+      row.className = 'want-row';
+      const sel = document.createElement('select');
+      const kw = menuFilterKw;
+      Object.entries(activeMeals).forEach(([code, m]) => {
+        if (kw && !m.name.toLowerCase().includes(kw)) return;
+        const opt = document.createElement('option');
+        opt.value = code;
+        opt.textContent = m.name + ' · ' + yuan(m.price);
+        if (code === w.code) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      if (!sel.querySelector('option[value="' + w.code + '"]')) {
+        const cur = activeMeals[w.code];
+        if (cur) {
+          const opt = document.createElement('option');
+          opt.value = w.code;
+          opt.textContent = cur.name + ' · ' + yuan(cur.price);
+          opt.selected = true;
+          sel.appendChild(opt);
+        }
+      }
+      sel.onchange = () => { w.code = sel.value; sub.textContent = pSubText(p); renderSummary(); };
+      const qty = document.createElement('div');
+      qty.className = 'qty';
+      const minus = document.createElement('button');
+      minus.textContent = '−';
+      minus.onclick = () => { if (w.qty > 1) { w.qty--; qv.textContent = w.qty; sub.textContent = pSubText(p); renderSummary(); } };
+      const qv = document.createElement('span');
+      qv.textContent = w.qty;
+      const plus = document.createElement('button');
+      plus.textContent = '＋';
+      plus.onclick = () => { if (w.qty < 5) { w.qty++; qv.textContent = w.qty; sub.textContent = pSubText(p); renderSummary(); } };
+      qty.appendChild(minus); qty.appendChild(qv); qty.appendChild(plus);
+      const wdel = document.createElement('button');
+      wdel.className = 'wdel';
+      wdel.textContent = '✕';
+      wdel.title = '删除这一样';
+      wdel.onclick = () => { p.wants.splice(wi, 1); renderEditor(); };
+      row.appendChild(sel); row.appendChild(qty); row.appendChild(wdel);
+      card.appendChild(row);
+    });
+
+    const addWant = document.createElement('button');
+    addWant.className = 'add-row';
+    addWant.textContent = '＋ 加一样想吃的';
+    addWant.onclick = () => { p.wants.push({ code: Object.keys(activeMeals)[0], qty: 1 }); renderEditor(); };
+    card.appendChild(addWant);
+    editorEl.appendChild(card);
+  });
+  renderSummary();
+}
+
+/* 人员小计：n 样 · 合计 ¥xx.xx */
+function pSubText(p) {
+  const totalQty = p.wants.reduce((a, w) => a + w.qty, 0);
+  const totalFen = p.wants.reduce((a, w) => a + ((activeMeals[w.code] || {}).price || 0) * w.qty, 0);
+  return totalQty + ' 样 · ' + yuan(totalFen);
+}
+
+/* 编辑器底部汇总 */
+function renderSummary() {
+  const el = document.getElementById('editorSummary');
+  const totalQty = people.reduce((a, p) => a + p.wants.reduce((x, w) => x + w.qty, 0), 0);
+  const totalFen = people.reduce(
+    (a, p) => a + p.wants.reduce((x, w) => x + ((activeMeals[w.code] || {}).price || 0) * w.qty, 0),
+    0
+  );
+  el.innerHTML =
+    '<span>共 <b>' + people.length + '</b> 人 · <b>' + totalQty + '</b> 件</span>' +
+    '<span>预估原价 <b>' + yuan(totalFen) + '</b></span>';
+}
+
+document.getElementById('addPersonBtn').onclick = () => {
+  people.push({ name: '拼单人' + (people.length + 1), wants: [{ code: Object.keys(activeMeals)[0], qty: 1 }] });
+  renderEditor();
+};
+
+/* 菜单搜索：餐品多时（真实连线 118 项）显示 */
+const menuFilterEl = document.getElementById('menuFilter');
+const menuFilterInput = document.getElementById('menuFilterInput');
+function syncMenuFilter() {
+  const many = Object.keys(activeMeals).length >= 15;
+  menuFilterEl.style.display = many ? 'block' : 'none';
+  if (!many) { menuFilterKw = ''; menuFilterInput.value = ''; }
+}
+menuFilterInput.oninput = () => {
+  menuFilterKw = menuFilterInput.value.trim().toLowerCase();
+  renderEditor();
+};
+
+/* ================= 优化主流程（带动画） ================= */
+
+const steps = [0, 1, 2, 3].map((i) => document.getElementById('step' + i));
+const pbar = document.getElementById('pbar');
+const pbarText = document.getElementById('pbarText');
+const resultBody = document.getElementById('resultBody');
+const runBtn = document.getElementById('runBtn');
+
+function setStep(idx, state) {
+  steps.forEach((el, i) => {
+    el.className = 'step';
+    if (i < idx) el.classList.add('done');
+    if (i === idx && state === 'active') el.classList.add('active');
+    if (i === idx && state === 'done') el.classList.add('done');
+  });
+}
+
+function buildBasket() {
+  const map = new Map();
+  people.forEach((p) => {
+    p.wants.forEach((w) => {
+      if (!map.has(w.code)) {
+        map.set(w.code, { productCode: w.code, name: MEALS[w.code].name, quantity: 0, unit: MEALS[w.code].price, persons: [] });
+      }
+      const b = map.get(w.code);
+      b.quantity += w.qty;
+      b.persons.push({ name: p.name, qty: w.qty });
+    });
+  });
+  return Array.from(map.values());
+}
+
+function buildShares(items) {
+  return people.map((p) => {
+    const originalFen = items.reduce((acc, it) => {
+      const mine = it.persons.filter((x) => x.name === p.name).reduce((a, x) => a + x.qty, 0);
+      return acc + mine * it.unit;
+    }, 0);
+    return { name: p.name, originalFen };
+  });
+}
+
+function renderResult(opt, split, suggestion, autoAdded) {
+  const r = opt.best.result;
+  const saved = r.originalPrice - r.price;
+  const usedChips = [];
+  opt.best.assignment.forEach((ii, ci) => {
+    if (ii < 0) return;
+    const cp = activeCoupons[ci];
+    const item = opt.items[ii];
+    const names = item.persons.map((p) => p.name).join('、');
+    usedChips.push('<span class="chip">🎫 <b>' + cp.title + '</b> → [' + item.name + ']（' + (names || '拼单篮') + '）</span>');
+  });
+  const maxPay = Math.max(...split.shares.map((s) => s.payFen), 1);
+  const rows = split.shares
+    .map((s, i) => {
+      const w = Math.round((s.payFen / maxPay) * 100);
+      const color = PERSON_COLORS[i % PERSON_COLORS.length];
+      return (
+        '<div class="split-row"><span class="who">' + s.name + '</span>' +
+        '<div class="bar-bg"><div class="bar" data-w="' + w + '" style="background:' + color + '"></div></div>' +
+        '<span class="amt">' + yuan(s.payFen) + ' <small>省 ' + yuan(s.discountFen) + '</small></span></div>'
+      );
+    })
+    .join('');
+  const sumPay = split.shares.reduce((a, s) => a + s.payFen, 0);
+  const okMark = sumPay === r.price ? '✓ 与实付对平' : '✗ 差额 ' + yuan(Math.abs(sumPay - r.price));
+
+  let addonHtml = '';
+  if (suggestion) {
+    addonHtml =
+      '<div class="addon-card"><div><div class="t">💡 凑单建议：+1 份' + suggestion.addon.name + '（' + yuan(suggestion.addon.unit) + '）</div>' +
+      '<div class="d">实付 ' + yuan(r.price) + ' → ' + yuan(suggestion.newPriceFen) + '，<b>净省 ' + yuan(suggestion.savingFen) + '</b></div></div>' +
+      '<button class="addon-btn" id="autoAddBtn">一键加入</button></div>';
+  } else if (autoAdded) {
+    addonHtml = '<div class="addon-card"><div><div class="t">✅ 已自动加入最优凑单品</div><div class="d">新一轮穷举已确认该方案仍为最优</div></div></div>';
+  }
+
+  resultBody.innerHTML =
+    '<div class="price-hero"><div class="big">' + yuan(r.price) + '</div>' +
+    '<div class="meta">原价 ' + yuan(r.originalPrice) + ' · 共省 <b>' + yuan(saved) + '</b>（' + pct(saved, r.originalPrice) + '）</div></div>' +
+    '<div class="coupon-chips">' + (usedChips.length ? usedChips.join('') : '<span class="chip">当前没有可用上的券</span>') + '</div>' +
+    '<h3 style="font-size:15px;margin-bottom:10px">💰 AA 分摊</h3>' + rows +
+    '<div class="split-total">合计 ' + yuan(sumPay) + ' ' + okMark + '</div>' +
+    addonHtml +
+    '<div class="stat-line">📊 真实算价 ' + opt.calls + ' 次（穷举 ' + opt.combos + ' 种组合）· ' + opt.items.length + ' 种商品 · ' + people.length + ' 人拼单</div>';
+
+  requestAnimationFrame(() => {
+    resultBody.querySelectorAll('.bar').forEach((b) => (b.style.width = b.dataset.w + '%'));
+  });
+  if (suggestion) {
+    document.getElementById('autoAddBtn').onclick = () => autoAdd(suggestion);
+  }
+}
+
+async function run() {
+  runBtn.disabled = true;
+  const items = buildBasket();
+  if (items.length === 0) {
+    pbarText.textContent = '⚠️ 请先给至少一个人加一样想吃的';
+    runBtn.disabled = false;
+    return;
+  }
+
+  // ① 建篮算基准价
+  setStep(0, 'active');
+  pbar.style.width = '0%';
+  pbarText.textContent = '汇总 ' + people.length + ' 人的意愿，合并同类商品…';
+  await sleep(600);
+  const opt = optimize(items, COUPONS);
+  pbarText.textContent = '拼单篮 ' + items.length + ' 种商品，基准价（无券）= ' + yuan(opt.base.price);
+  await sleep(700);
+  setStep(0, 'done');
+
+  // ② 穷举券组合（动画：进度条 + 最优价递减）
+  setStep(1, 'active');
+  let curBest = opt.base.price;
+  const delay = Math.max(20, Math.min(90, Math.floor(2600 / Math.max(opt.trace.length, 1))));
+  for (let i = 0; i < opt.trace.length; i++) {
+    const t = opt.trace[i];
+    if (t.price < curBest) curBest = t.price;
+    pbar.style.width = Math.round(((i + 1) / opt.trace.length) * 100) + '%';
+    pbarText.textContent =
+      '穷举券组合 ' + (i + 1) + ' / ' + opt.trace.length + ' · 本组合实付 ' + yuan(t.price) + ' · 当前最优 ' + yuan(curBest);
+    await sleep(delay);
+  }
+  setStep(1, 'done');
+
+  // ③ 最优方案 + AA 分摊
+  setStep(2, 'active');
+  pbarText.textContent = '最优方案锁定，按小计占比分配优惠…';
+  const shares = buildShares(items);
+  const split = splitBill(shares, opt.best.result.price, opt.best.result.discount);
+  await sleep(650);
+  renderResult(opt, split, null, false);
+  setStep(2, 'done');
+
+  // ④ 凑单建议
+  setStep(3, 'active');
+  pbarText.textContent = '试算单价最低的加购候选…';
+  await sleep(500);
+  const { suggestion, calls } = suggestAddon(items, COUPONS, opt.best.assignment, opt.best.result.price);
+  renderResult(opt, split, suggestion, false);
+  setStep(3, 'done');
+  pbar.style.width = '100%';
+  pbarText.textContent = suggestion
+    ? '完成 ✓ 发现凑单机会，净省 ' + yuan(suggestion.savingFen)
+    : '完成 ✓ 当前已是全款最优，无需凑单';
+  runBtn.disabled = false;
+  return { items, opt, suggestion, calls };
+}
+
+async function autoAdd(suggestion) {
+  if (liveMode) {
+    // 真实连线：把凑单品交给服务端重跑一轮真实优化
+    await runLive(suggestion.addon.code);
+    return;
+  }
+  runBtn.disabled = true;
+  // 凑单品记在发起人（第一个人）名下
+  people[0].wants.push({ code: suggestion.addon.code, qty: 1 });
+  renderEditor();
+  const items = buildBasket();
+  const opt = optimize(items, COUPONS);
+  const shares = buildShares(items);
+  const split = splitBill(shares, opt.best.result.price, opt.best.result.discount);
+  setStep(3, 'active');
+  pbarText.textContent = '已加入「' + suggestion.addon.name + '」，重新穷举确认最优…';
+  await sleep(500);
+  renderResult(opt, split, null, true);
+  setStep(3, 'done');
+  pbarText.textContent = '完成 ✓ 实付降至 ' + yuan(opt.best.result.price);
+  runBtn.disabled = false;
+}
+
+runBtn.onclick = () => (liveMode ? runLive() : run());
+
+/* ================= 真实连线模式（经 demo-server.js，Token 不出服务端） ================= */
+
+const modeOfflineBtn = document.getElementById('modeOfflineBtn');
+const modeLiveBtn = document.getElementById('modeLiveBtn');
+const liveConfig = document.getElementById('liveConfig');
+const liveHint = document.getElementById('liveHint');
+const loadMenuBtn = document.getElementById('loadMenuBtn');
+const storeCodeInput = document.getElementById('storeCodeInput');
+const editorTitle = document.getElementById('editorTitle');
+
+function setMode(live) {
+  liveMode = live;
+  modeOfflineBtn.classList.toggle('on', !live);
+  modeLiveBtn.classList.toggle('on', live);
+  liveConfig.classList.toggle('show', live);
+  liveHint.classList.toggle('show', live);
+  runBtn.textContent = live ? '🔴 真实优化（连麦当劳 MCP）' : '🍟 开始拼单优化';
+  editorTitle.textContent = live
+    ? '📝 拼单意愿（门店 ' + (storeCodeInput.value || '?') + ' · 真实连线）'
+    : '📝 拼单意愿（北京新东安二号餐厅 · 到店自取）';
+}
+
+modeOfflineBtn.onclick = () => {
+  activeMeals = MEALS;
+  activeCoupons = COUPONS;
+  setMode(false);
+  syncMenuFilter();
+  renderEditor();
+};
+
+modeLiveBtn.onclick = async () => {
+  setMode(true);
+  try {
+    const r = await fetch('/api/status');
+    const s = await r.json();
+    if (!s.token) {
+      liveHint.innerHTML = '⚠️ 服务端未配置 MCD_TOKEN：先 <code>export MCD_TOKEN=xxx</code> 再重启 <code>node demo-site/server.js</code>';
+    } else if (!liveReady) {
+      liveHint.innerHTML = '<b>MCD_TOKEN 已配置 ✓</b> 先点「拉取真实菜单」，再开始优化（Token 只在服务端，浏览器不可见）';
+    }
+  } catch {
+    liveHint.innerHTML = '⚠️ 未检测到演示服务器：先运行 <code>node demo-site/server.js</code>，再从 http://127.0.0.1:8080 打开本页';
+  }
+};
+
+loadMenuBtn.onclick = async () => {
+  loadMenuBtn.disabled = true;
+  loadMenuBtn.textContent = '拉取中…';
+  try {
+    const sc = storeCodeInput.value.trim() || '1950526';
+    const r = await fetch('/api/menu?storeCode=' + encodeURIComponent(sc));
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'HTTP ' + r.status);
+    activeMeals = {};
+    d.meals.forEach((m) => {
+      activeMeals[m.code] = { name: m.name, price: m.price, orig: m.price };
+    });
+    activeCoupons = d.coupons.map((c) => ({
+      id: c.couponId,
+      code: c.couponCode,
+      title: c.title,
+      productCodes: c.productCodes || [],
+    }));
+    liveReady = true;
+    syncMenuFilter();
+    renderEditor(); // 内部会把失效的餐品 code 兜底到菜单第一项
+    liveHint.innerHTML = '<b>真实菜单已加载 ✓</b>（' + d.meals.length + ' 个餐品 · ' + d.coupons.length + ' 张门店可用券）';
+    editorTitle.textContent = '📝 拼单意愿（门店 ' + sc + ' · 真实连线）';
+  } catch (e) {
+    liveHint.innerHTML = '⚠️ ' + (e.message || e);
+  } finally {
+    loadMenuBtn.disabled = false;
+    loadMenuBtn.textContent = '拉取真实菜单';
+  }
+};
+
+async function runLive(addonCode) {
+  runBtn.disabled = true;
+  resultBody.innerHTML = '<div class="result-empty">真实连线计算中…</div>';
+  setStep(0, 'active');
+  pbar.style.width = '0%';
+  pbarText.textContent = '连接本地桥接服务器，拉取真实菜单与门店券…（MCD_TOKEN 不出服务端）';
+  try {
+    const res = await fetch('/api/optimize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        storeCode: storeCodeInput.value.trim() || '1950526',
+        people,
+        addonCode: addonCode || undefined,
+      }),
+    });
+    if (!res.ok || !res.body) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error || 'HTTP ' + res.status);
+    }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    let payload = null;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const lines = chunk.split('\n');
+        const ev = (lines.find((l) => l.startsWith('event: ')) || '').slice(7).trim();
+        const dl = lines.find((l) => l.startsWith('data: '));
+        if (!dl) continue;
+        const data = JSON.parse(dl.slice(6));
+        if (ev === 'menu') {
+          pbarText.textContent = '真实菜单 ' + data.count + ' 个餐品 ✓';
+        } else if (ev === 'coupons') {
+          activeCoupons = data.coupons.map((c) => ({
+            id: c.couponId,
+            code: c.couponCode,
+            title: c.title,
+            productCodes: c.productCodes || [],
+          }));
+          pbarText.textContent = '门店可用券 ' + data.coupons.length + ' 张 ✓ 建篮算基准价…';
+        } else if (ev === 'base') {
+          pbarText.textContent = '基准价（无券）= ' + yuan(data.price) + '，开始券分配搜索…';
+          setStep(0, 'done');
+          setStep(1, 'active');
+        } else if (ev === 'combo') {
+          if (data.total > 0) {
+            pbar.style.width = Math.min(99, Math.round((data.done / data.total) * 100)) + '%';
+          }
+          pbarText.textContent =
+            '真实算价 ' + data.done + (data.total ? ' / ~' + data.total : '') +
+            ' · 本组合实付 ' + yuan(data.price) + ' · 当前最优 ' + yuan(data.bestPrice);
+        } else if (ev === 'result') {
+          payload = data;
+        } else if (ev === 'error') {
+          throw new Error(data.message);
+        }
+      }
+    }
+    if (!payload) throw new Error('服务器没有返回结果');
+    setStep(1, 'done');
+    setStep(2, 'active');
+    pbarText.textContent = '最优方案锁定，按小计占比分配优惠…';
+    await sleep(400);
+    const opt = {
+      base: payload.base,
+      best: payload.best,
+      calls: payload.calls,
+      combos: payload.combos,
+      items: payload.items.map((it) => ({
+        productCode: it.code,
+        name: it.name,
+        quantity: it.qty,
+        unit: it.unit,
+        persons: it.persons,
+      })),
+    };
+    setStep(2, 'done');
+    setStep(3, 'active');
+    pbarText.textContent = '试算凑单候选…';
+    await sleep(300);
+    renderResult(opt, payload.split, payload.suggestion, payload.autoAdded);
+    setStep(3, 'done');
+    pbar.style.width = '100%';
+    pbarText.textContent =
+      (payload.suggestion
+        ? '完成 ✓ 发现凑单机会，净省 ' + yuan(payload.suggestion.savingFen)
+        : '完成 ✓ 真实算价完成') +
+      '（真实连线 · ' + (payload.mode === 'exhaustive' ? '穷举' : '贪心+局部验证') + '）';
+  } catch (e) {
+    pbarText.textContent = '⚠️ ' + (e.message || e);
+    steps.forEach((el) => (el.className = 'step'));
+  } finally {
+    runBtn.disabled = false;
+  }
+}
+
+/* ================= 终端打字动画 ================= */
+
+const TERM_LINES = [
+  { t: '$ node bin/mctuan.js optimize --demo', c: 'c-cmd' },
+  { t: '🧮 搜索最优券组合（4 张券 · 4 种商品）…', c: 'c-dim' },
+  { t: '穷举 50 种券组合（最多 51 次真实算价，冲突组合自动跳过）…', c: 'c-dim' },
+  { t: '', c: '' },
+  { t: '🍟 麦门拼单官 · 最优拼单方案 （北京新东安二号餐厅 · 3 人拼单）', c: '' },
+  { t: '──────────────────────────────────────────────', c: 'c-dim' },
+  { t: '🛒 拼单篮:', c: '' },
+  { t: '   巨无霸套餐        ×1  ¥39.50   → 张三', c: '' },
+  { t: '   麦辣鸡腿堡套餐    ×1  ¥34.50   → 李四', c: '' },
+  { t: '   中薯条            ×2  ¥27.00   → 李四、王五', c: '' },
+  { t: '   麦辣鸡腿堡        ×1  ¥22.50   → 王五', c: '' },
+  { t: '', c: '' },
+  { t: '✅ 实付 ¥80.00（原价 ¥123.50，共省 ¥43.50 · 35.2%）', c: 'c-red' },
+  { t: '🎫 已用券:', c: '' },
+  { t: '   · 中薯条买一送一 → 挂在 [中薯条]（李四、王五）', c: 'c-cyan' },
+  { t: '   · 满100减30 → 挂在 [巨无霸套餐]（张三）', c: 'c-cyan' },
+  { t: '💰 分摊: （优惠按小计占比分配）', c: '' },
+  { t: '   张三  ¥25.59（原 ¥39.50，省 ¥13.91）', c: '' },
+  { t: '   李四  ¥31.09（原 ¥48.00，省 ¥16.91）', c: '' },
+  { t: '   王五  ¥23.32（原 ¥36.00，省 ¥12.68）', c: '' },
+  { t: '   合计  ¥80.00 ✓ 与实付对平', c: 'c-green' },
+  { t: '', c: '' },
+  { t: '💡 凑单建议: +1 份菠萝派(¥6.50)', c: 'c-green' },
+  { t: '   实付 ¥80.00 → ¥76.50，净省 ¥3.50', c: 'c-green' },
+  { t: '', c: '' },
+  { t: '📊 真实算价调用 calculate-price 共 34 次 · 穷举模式', c: 'c-dim' },
+  { t: '⚠️ 本工具只算价，不下单；价格以麦当劳官方渠道实时结果为准。', c: 'c-dim' },
+];
+
+let termPlaying = false;
+async function playTerminal() {
+  if (termPlaying) return;
+  termPlaying = true;
+  const body = document.getElementById('termBody');
+  body.innerHTML = '';
+  for (const line of TERM_LINES) {
+    const div = document.createElement('div');
+    if (line.c) div.className = line.c;
+    if (line.c === 'c-cmd') {
+      for (let i = 0; i <= line.t.length; i++) {
+        div.textContent = line.t.slice(0, i) + (i < line.t.length ? '▊' : '');
+        body.appendChild ? null : null;
+        await sleep(28);
+        if (i === line.t.length) div.textContent = line.t;
+      }
+      body.appendChild(div);
+    } else {
+      div.textContent = line.t || ' ';
+      body.appendChild(div);
+      await sleep(line.t === '' ? 60 : 110);
+    }
+  }
+  termPlaying = false;
+}
+
+document.getElementById('termPlayBtn').onclick = playTerminal;
+
+/* ================= 初始化 ================= */
+
+renderEditor();
+new IntersectionObserver((entries, obs) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) {
+      playTerminal();
+      obs.disconnect();
+    }
+  });
+}, { threshold: 0.35 }).observe(document.querySelector('.terminal'));
+</script>
+</body>
+</html>

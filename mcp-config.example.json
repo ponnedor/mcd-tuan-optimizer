@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "mcd": {
+      "type": "http",
+      "url": "https://mcp.mcd.cn",
+      "headers": {
+        "Authorization": "Bearer YOUR_MCP_TOKEN",
+        "Accept": "application/json, text/event-stream"
+      }
+    }
+  }
+}

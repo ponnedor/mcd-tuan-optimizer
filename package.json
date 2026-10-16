@@ -1,0 +1,24 @@
+{
+  "name": "mcd-tuan-optimizer",
+  "version": "1.0.0",
+  "description": "麦门拼单官 —— 基于麦当劳 MCP 的办公室拼单优化 CLI：找店 → 菜单 → 领券 → 组合优化 → 真实算价 → AA 分摊",
+  "bin": {
+    "mctuan": "bin/mctuan.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo:site": "node demo-site/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcd",
+    "mcp",
+    "coupon",
+    "split-bill",
+    "cli"
+  ],
+  "license": "MIT",
+  "private": true
+}

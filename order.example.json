@@ -1,0 +1,10 @@
+{
+  "storeCode": "1950526",
+  "storeName": "北京新东安二号餐厅",
+  "budget": 100,
+  "people": [
+    { "name": "张三", "wants": [{ "name": "巨无霸套餐", "quantity": 1 }] },
+    { "name": "李四", "wants": [{ "name": "麦辣鸡腿堡套餐", "quantity": 1 }, { "name": "中薯条", "quantity": 1 }] },
+    { "name": "王五", "wants": [{ "name": "麦辣鸡腿堡", "quantity": 1 }, { "name": "中薯条", "quantity": 1 }] }
+  ]
+}

@@ -1,0 +1,3 @@
+event: message
+data: {"jsonrpc":"2.0","id":872341,"result":{"content":[{"type":"text","text":"为您查询到附近门店如下：\n共找到 1 家门店。{\"success\":true,\"code\":0,\"msg\":\"ok\",\"data\":[{\"storeCode\":\"1950526\",\"storeName\":\"北京新东安二号餐厅\",\"address\":\"北京市东城区王府井大街138号新东安广场2层\",\"distance\":\"0.8km\",\"beCode\":\"\"}]}"}]}}
+

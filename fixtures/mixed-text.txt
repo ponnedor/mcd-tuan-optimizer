@@ -1,0 +1,4 @@
+亲爱的用户，为您查询到门店菜单如下：
+当前共 118 个餐品，涵盖 15 个分类，价格单位为元。
+{"success":true,"code":0,"msg":"ok","data":{"categories":[{"name":"人气热卖","meals":[{"code":"9900016001","tags":["套餐"]},{"code":"9900016075","tags":["热卖"]}]}],"meals":{"9900016075":{"name":"龙焰芝士棒鸡腿堡三件套","image":"https://img.mcd.cn/prod/9900016075.png","currentPrice":"29.9","originalPrice":"51.5","canWithOrder":false},"9900016001":{"name":"巨无霸套餐","image":"https://img.mcd.cn/prod/9900016001.png","currentPrice":"39.5","originalPrice":"45.0","canWithOrder":true}}}}
+祝您用餐愉快！如需了解活动详情，可查看领券中心。
