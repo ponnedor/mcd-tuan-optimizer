@@ -57,7 +57,7 @@
 ## 安装
 
 ```bash
-git clone https://github.com/pomnedor/mcd-tuan-optimizer.git
+git clone https://github.com/ponnedor/mcd-tuan-optimizer.git
 cd mcd-tuan-optimizer
 
 # 零运行时依赖 —— npm install 不会安装任何第三方包（Node >= 18，内置 fetch 即可）
